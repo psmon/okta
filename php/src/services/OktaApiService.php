@@ -29,6 +29,7 @@ class OktaApiService
             'client_id' => $this->clientId,
             'redirect_uri' => $this->redirectUri,
             'state' => $state,
+            'scope' => 'openid',
         ]);
         return $url;
     }
