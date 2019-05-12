@@ -11,18 +11,19 @@ class OktaApiService
     private $apiUrlBase;
 
     public function __construct()
-    {
+    {      
         $this->clientId     = getenv('CLIENT_ID');
         $this->clientSecret = getenv('CLIENT_SECRET');
         $this->redirectUri  = getenv('REDIRECT_URI');
         $this->metadataUrl  = getenv('METADATA_URL');
         $this->apiToken     = getenv('API_TOKEN');
-        $this->apiUrlBase   = getenv('API_URL_BASE');
+        $this->apiUrlBase   = getenv('API_URL_BASE');        
     }
 
     public function buildAuthorizeUrl($state)
     {
         $metadata = $this->httpRequest($this->metadataUrl);
+
         $url = $metadata->authorization_endpoint . '?' . http_build_query([
             'response_type' => 'code',
             'client_id' => $this->clientId,
@@ -76,10 +77,43 @@ class OktaApiService
         }
     }
 
+    public function registerUser($input)
+    {
+        $data['profile'] = [
+            'firstName' => $input['first_name'],
+            'lastName'  => $input['last_name'],
+            'email'     => $input['email'],
+            'login'     => $input['email']
+        ];
+        $data['credentials'] = [
+            'password'  => [
+                'value' => $input['password']
+            ]
+        ];
+        $data = json_encode($data);
+
+        $ch = curl_init($this->apiUrlBase . 'users');
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($data),
+            'Authorization: SSWS ' . $this->apiToken
+        ]);
+
+        return curl_exec($ch);
+    }
+
     public function findUser($input)
     {
         $url = $this->apiUrlBase . 'users?q=' . urlencode($input['email']) . '&limit=1';
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Accept: application/json',
@@ -95,6 +129,8 @@ class OktaApiService
         $url = $this->apiUrlBase . 'users/' . $userId . '/lifecycle/reset_password';
 
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, []);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -111,9 +147,20 @@ class OktaApiService
     {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+
         if ($params) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
         }
-        return json_decode(curl_exec($ch));
+
+        $result = curl_exec($ch);
+        if ($result === FALSE) {
+            error_log("==== CurlError:".curl_error($ch));
+            die(curl_error($ch));
+         }
+        
+        return json_decode($result);
     }
 }

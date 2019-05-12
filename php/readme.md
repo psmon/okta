@@ -1,7 +1,7 @@
 # PHP Sample with OKTA
 
-사전요구지식
-- [php 셋팅](https://github.com/psmon/phpstarter)
+Prerequisites
+- [Compose 기반 PHP 개발환경](https://github.com/psmon/phpstarter)
 
 ## Application LayOut - 권장 레이아웃
     /vendor - 컴포져에의해 생성된 의존성파일(커밋x)

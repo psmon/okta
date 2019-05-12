@@ -24,7 +24,7 @@
                     } else {
                 ?>
                         <p>Not logged in</p>
-                        <p><a href="/?login">Log In</a> | <a href="/?forgot">Forgot Password</a>
+                        <p><a href="/?login">Log In</a> | <a href="/?forgot">Forgot Password</a> | <a href="/?register">Register</a></p>
                 <?php
                     }
                 ?>
